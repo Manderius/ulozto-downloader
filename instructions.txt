@@ -1,0 +1,1 @@
+you need to be in flask folder to run ./makeAndRunContainer.bash

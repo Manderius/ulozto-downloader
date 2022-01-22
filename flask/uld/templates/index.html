@@ -1,0 +1,22 @@
+{%extends "pomocne/cardbase.html"%} 
+{%block cardbody%}
+<form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+
+    <div class="form-label mt-3">Url z <a href="https://uloz.to/" target="_blank" rel="noopener noreferrer">Uložto</a></div>
+    {{ form.url(class="form-control") }}
+
+    {{ form.parts.label(class="form-label mt-3") }}
+    {{ form.parts(class="form-control") }}
+
+    <div class="form-check mt-3">
+        {{ form.autoCaptcha(class="form-check-input") }}
+        {{ form.autoCaptcha.label(class="form-check-label") }}
+    </div>
+
+    {{ form.path.label(class="form-label mt-3") }}
+    {{ form.path(class="form-select") }}
+
+    {{ form.submit(class="btn btn-secondary mt-5") }}
+</form>
+{%endblock%}

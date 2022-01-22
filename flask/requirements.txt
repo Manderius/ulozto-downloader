@@ -4,3 +4,8 @@ ansicolors
 numpy
 pysocks
 stem
+
+flask
+flask_wtf
+wtforms
+ansi2html

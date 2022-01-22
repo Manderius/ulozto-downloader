@@ -30,28 +30,23 @@ class Downloader:
 
     def terminate(self):
         self.terminating = True
-        if self.cli_initialized:
-            sys.stdout.write("\033[{};{}H".format(
-                self.parts + CLI_STATUS_STARTLINE + 2, 0))
-            sys.stdout.write("\033[?25h")  # show cursor
-            self.cli_initialized = False
 
-        print('Terminating download. Please wait for stopping all processes.')
+        utils._print('Terminating download. Please wait for stopping all processes.')
         if hasattr(self, "captcha_process") and self.captcha_process is not None:
             self.captcha_process.terminate()
-        print('Terminate download processes')
+        utils._print('Terminate download processes')
         if hasattr(self, "processes") and self.processes is not None:
             for p in self.processes:
                 p.terminate()
-        print('Download terminated.')
+        utils._print('Download terminated.')
         if hasattr(self, "monitor") and self.monitor is not None:
             self.monitor.terminate()
-        print('End download monitor')
+        utils._print('End download monitor')
 
     def _captcha_print_func_wrapper(self, text):
         if not self.cli_initialized:
             sys.stdout.write(colors.blue(
-                "[Link solve]\t") + text + "\033[K\r")
+                "[Link solve]\t") + text + "\n")
         else:
             utils.print_captcha_status(text, self.parts)
 
@@ -192,9 +187,9 @@ class Downloader:
         previously_downloaded = 0
 
         # 1. Prepare downloads
-        print("Starting downloading for url '{}'".format(url))
+        utils._print("Starting downloading for url '{}'".format(url))
         # 1.1 Get all needed information
-        print("Getting info (filename, filesize, ...)")
+        utils._print("Getting info (filename, filesize, ...)")
 
         try:
             tor = TorRunner()
@@ -202,19 +197,19 @@ class Downloader:
             page.parse()
 
         except RuntimeError as e:
-            print(colors.red('Cannot download file: ' + str(e)))
+            utils._print(colors.red('Cannot download file: ' + str(e)))
             sys.exit(1)
 
         # Do check - only if .udown status file not exists get question
         output_filename = os.path.join(target_dir, page.filename)
         if os.path.isfile(output_filename) and not os.path.isfile(output_filename+DOWNPOSTFIX):
-            print(colors.yellow(
+            utils._print(colors.yellow(
                 "WARNING: File '{}' already exists, overwrite it? [y/n] ".format(output_filename)), end="")
             if input().strip() != 'y':
                 sys.exit(1)
 
         if page.quickDownloadURL is not None:
-            print("You are VERY lucky, this is QUICK direct download without CAPTCHA, downloading as 1 quick part :)")
+            utils._print("You are VERY lucky, this is QUICK direct download without CAPTCHA, downloading as 1 quick part :)")
             self.download_type = "fullspeed direct download (without CAPTCHA)"
             download_url = page.quickDownloadURL
             self.captcha_solve_func = None
@@ -222,11 +217,11 @@ class Downloader:
         if page.slowDownloadURL is not None:
             self.isLimited = True
             if page.isDirectDownload:
-                print("You are lucky, this is slow direct download without CAPTCHA :)")
+                utils._print("You are lucky, this is slow direct download without CAPTCHA :)")
                 self.download_type = "slow direct download (without CAPTCHA)"
             else:
                 self.isCaptcha = True
-                print(
+                utils._print(
                     "CAPTCHA protected download - CAPTCHA challenges will be displayed\n")
                 self.download_type = "CAPTCHA protected download"
 
@@ -243,7 +238,7 @@ class Downloader:
             file_data = SegFileLoader(output_filename, total_size, parts)
             downloads = file_data.make_writers()
         except Exception as e:
-            print(colors.red(
+            utils._print(colors.red(
                 f"Failed: Can not create '{output_filename}' error: {e} "))
             self.terminate()
             sys.exit()
@@ -251,15 +246,14 @@ class Downloader:
         # 2. Initialize cli status table interface
         # if windows, use 'cls', otherwise use 'clear'
         os.system('cls' if os.name == 'nt' else 'clear')
-        sys.stdout.write("\033[?25l")  # hide cursor
         self.cli_initialized = True
         page.cli_initialized = True  # for tor in Page
-        print(colors.blue("File:\t\t") + colors.bold(page.filename))
-        print(colors.blue("URL:\t\t") + page.url)
-        print(colors.blue("Download type:\t") + self.download_type)
-        print(colors.blue("Size / parts: \t") +
+        utils._print(colors.blue("File:\t\t") + colors.bold(page.filename), y=1)
+        utils._print(colors.blue("URL:\t\t") + page.url, y=2)
+        utils._print(colors.blue("Download type:\t") + self.download_type, y=3)
+        utils._print(colors.blue("Size / parts: \t") +
               colors.bold(f"{round(total_size / 1024**2, 2)}MB => " +
-              f"{file_data.parts} x {round(file_data.part_size / 1024**2, 2)}MB"))
+              f"{file_data.parts} x {round(file_data.part_size / 1024**2, 2)}MB"), y=4)
 
         # fill placeholder before download started
         for part in downloads:
@@ -332,23 +326,16 @@ class Downloader:
             if p.exitcode != 0:
                 success = False
 
-        # clear cli
-        sys.stdout.write("\033[{};{}H".format(
-            parts + CLI_STATUS_STARTLINE + 2, 0))
-        sys.stdout.write("\033[K")
-        sys.stdout.write("\033[?25h")  # show cursor
-        self.cli_initialized = False
-
         # result end status
         if not success:
-            print(colors.red("Failure of one or more downloads, exiting"))
+            utils._print(colors.red("Failure of one or more downloads, exiting"))
             sys.exit(1)
 
         elapsed = time.time() - started
         # speed in bytes per second:
         speed = (total_size - previously_downloaded) / elapsed if elapsed > 0 else 0
-        print(colors.green("All downloads finished"))
-        print("Stats: Downloaded {}{} MB in {} (average speed {} MB/s)".format(
+        utils._print(colors.green("All downloads finished"))
+        utils._print("Stats: Downloaded {}{} MB in {} (average speed {} MB/s)".format(
             round((total_size - previously_downloaded) / 1024**2, 2),
             "" if previously_downloaded == 0 else (
                 "/"+str(round(total_size / 1024**2, 2))
@@ -359,5 +346,5 @@ class Downloader:
         # remove resume .udown file
         udown_file = output_filename + DOWNPOSTFIX
         if os.path.exists(udown_file):
-            print(f"Delete file: {udown_file}")
+            utils._print(f"Delete file: {udown_file}")
             os.remove(udown_file)

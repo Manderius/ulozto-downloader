@@ -1,12 +1,20 @@
 import sys
 import colors
 from . import const
+import requests
 
-def _print(text, x=0, y=0):
-    sys.stdout.write("\033[{};{}H".format(y, x))
-    sys.stdout.write("\033[K")
-    sys.stdout.write(text)
-    sys.stdout.flush()
+# f = open("output.txt", "w")
+def _print(text, x=0, y=0, end=""):
+    # f.write(f"{x} {y} {text}{end}\n")
+    # f.flush()
+
+    # sys.stdout.write("\033[{};{}H".format(y, x))
+    # sys.stdout.write("\033[K")
+    dictToSend = {'message':text, "y":y, "x":x}
+    res = requests.post('http://localhost:5000/line', json=dictToSend)
+    print(res)
+    # sys.stdout.write(f"{x} {y} {text}{end}\n")
+    # sys.stdout.flush()
 
 
 def print_part_status(id, text):

@@ -1,0 +1,24 @@
+{%extends "pomocne/cardbase.html"%} 
+{%block cardbody%}
+<div class="form-group">
+    <label for="textArea">Výstup konzole</label>
+    <div id="stdout">
+    </div>
+</div>
+{%endblock%}
+
+{%block anotherCard%}
+<div class="container">
+    <form action= {{url_for("download")}} method='POST'>
+        <divc class="row">
+                <div class="col-9">
+                    <input type="text" placeholder="Console input" class="form-control" id="consoleInput" name="consoleInput">
+                </div>
+                <div class="col-3">
+                    <button type="submit" class="col btn btn-secondary mb-2">Send to console</button>
+                </div>
+        </div>
+    </form>
+</div>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+{%endblock%}

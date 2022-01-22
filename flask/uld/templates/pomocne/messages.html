@@ -1,0 +1,10 @@
+<div class="row justify-content-center">
+    <div class="col" style="max-width: 600px;">
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+        <div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+</div>

@@ -4,6 +4,7 @@ import signal
 from os import path
 
 from uldlib import downloader, captcha, __version__, __path__
+from uldlib import utils
 
 
 def run():
@@ -22,7 +23,6 @@ def run():
     parser.add_argument('--version', action='version', version=__version__)
 
     args = parser.parse_args()
-
     if args.auto_captcha:
         model_path = path.join(__path__[0], "model.tflite")
         model_download_url = "https://github.com/JanPalasek/ulozto-captcha-breaker/releases/download/v2.2/model.tflite"
@@ -36,7 +36,7 @@ def run():
     # Register sigint handler
     def sigint_handler(sig, frame):
         d.terminate()
-        print('Program terminated.')
+        utils._print('Program terminated.')
         sys.exit(1)
 
     signal.signal(signal.SIGINT, sigint_handler)
