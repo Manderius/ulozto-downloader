@@ -2,6 +2,7 @@ dist/**
 build/**
 uld.egg-info/**
 uldlib/__pycache__/**
+flask/uld/uldlib/__pycache__/**
 parser.py
 
 ### VisualStudioCode ###

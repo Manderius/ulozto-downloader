@@ -7,6 +7,7 @@ import colors
 
 from .const import XML_HEADERS
 from .linkcache import LinkCache
+from .utils import _print
 
 from requests.sessions import RequestsCookieJar
 
@@ -215,7 +216,7 @@ class Page:
 
         while (self.numTorLinks + self.alreadyDownloaded) < self.parts:
             if not self.torRunning:
-                print("Starting TOR...")
+                _print("Starting TOR...")
                 # tor started after cli initialized
                 try:
                     self.tor.start(

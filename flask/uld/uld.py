@@ -11,12 +11,13 @@ from wtforms import (BooleanField, IntegerField, SelectField, StringField,
 from wtforms.validators import InputRequired
 from datetime import datetime
 
+
 class URLForm(FlaskForm):
     url = StringField("", [InputRequired()])
     parts = IntegerField('Počet částí', [InputRequired()])
     autoCaptcha = BooleanField('Povolte automatické čtení CAPTCHA')
     path = SelectField("Výběr pořadí", [InputRequired()])
-    submit = SubmitField("Submit")
+    submit = SubmitField("Odeslat")
 
 
 class JsonReader():
@@ -31,7 +32,7 @@ class JsonReader():
         return self._instance
 
     def read(self):
-        print(os.getcwd())
+        # print(os.getcwd())
         self._instance = None
         try:
             f = open(self.configPath)
@@ -46,16 +47,24 @@ class JsonReader():
         of.write(json.dumps(self._instance, indent=4))
         of.close()
 
-class ProcessHandler():
-    process = None
-    currentOutput = {"start":[], "middle":{}, "end":[]}
-    started = False
 
-    def startProcess(self, url, parts, captcha=True):
+class ProcessHandler():
+    def __init__(self) -> None:
+        self.process = None
+        self.currentOutput = {"start": [], "middle": {}, "end": []}
+        self.url = None
+
+    def startProcess(self, url, parts, path, processId, captcha=True):
+        self.url = url
+        self.id = processId
         workingDir = os.path.abspath(os.path.dirname(__file__))
-        self.currentOutput = {"start":[], "middle":{}, "end":[]}
-        self.process = subprocess.Popen([f"python {os.path.join(workingDir, 'ulozto-downloader.py')} --auto-captcha --parts {parts} {url}"],
-                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, shell=True, close_fds=True)
+        self.currentOutput = {"start": [], "middle": {}, "end": []}
+        self.process = subprocess.Popen(
+            [f"python {os.path.join(workingDir, 'ulozto-downloader.py')} --auto-captcha --parts {parts} --output {path} --id {processId} {url}"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, shell=True, close_fds=True)
+
+    def terminateProcess(self):
+        self.process.terminate()
 
     def addLine(self, line, y):
         if y == 0:
@@ -64,10 +73,7 @@ class ProcessHandler():
             else:
                 self.currentOutput["end"].append(line)
         else:
-            if y not in self.currentOutput["middle"] or y > 0:
-                self.currentOutput["middle"][y] = [line]
-            else:
-                self.currentOutput["middle"][y].append(line)
+            self.currentOutput["middle"][y] = [line]
 
     def parseLine(line):
         line = line.decode("utf-8")
@@ -76,18 +82,44 @@ class ProcessHandler():
         return y, newLine
 
     def read(self):
-        if self.currentOutput == {}: return ""
+        if self.currentOutput == {}:
+            return ""
         start = "\n".join(self.currentOutput["start"])
-        middle = "\n".join(["\n".join(i[1]) for i in sorted(list(self.currentOutput["middle"].items()))])
+        middle = "\n".join(["\n".join(i[1]) for i in sorted(
+            list(self.currentOutput["middle"].items()))])
         end = "\n".join(self.currentOutput["end"])
         return f"{datetime.now()}\n{start}\n{middle}\n{end}"
+
+    def input(self, string):
+        if self.process != None:
+            try:
+                self.process.stdin.write(string)
+                self.process.stdin.flush()
+                self.process.stdin.close()
+            except:
+                print("pipe is closed")
+        else:
+            print("process isn't started")
 
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "WA<+5y/f6dPr-q6s"
 jsonReader = JsonReader()
 conv = Ansi2HTMLConverter()
-processHandler = ProcessHandler()
+processHandlers = {}
+
+path = '/var/www/uld'
+
+try:
+    os.chdir(path)
+    print("Current working directory: {0}".format(os.getcwd()))
+except FileNotFoundError:
+    print("Directory: {0} does not exist".format(path))
+except NotADirectoryError:
+    print("{0} is not a directory".format(path))
+except PermissionError:
+    print("You do not have permissions to change to {0}".format(path))
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -100,12 +132,13 @@ def index():
         jsonReader._instance["defaults"]["parts"] = form.parts.data
         jsonReader._instance["defaults"]["pathID"] = int(form.path.data)
         jsonReader.save()
-        return redirect(url_for("download"))
+        return redirect(url_for("startdownload"))
 
     form.url.data = jsonReader.instance["defaults"]["url"]
     form.autoCaptcha.data = jsonReader.instance["defaults"]["auto-captcha"]
     form.parts.data = jsonReader.instance["defaults"]["parts"]
     return render_template("index.html", form=form, title="Zadejte data")
+
 
 def setChoices(form):
     defaultID = jsonReader.instance["defaults"]["pathID"]
@@ -115,38 +148,60 @@ def setChoices(form):
     if defaultID != "":
         form.path.choices = [(defaultID, paths[defaultID])]+form.path.choices
 
-@app.route('/download', methods=['GET', 'POST'])
-def download():
-    if request.method == 'POST':
-        if processHandler.process != None:
-            try:
-                processHandler.process.stdin.write(request.form["consoleInput"].encode("utf-8"))
-                processHandler.process.stdin.flush()
-                processHandler.process.stdin.close()
-                print(request.form["consoleInput"], request.form["consoleInput"].encode("utf-8"))
-            except:
-                print("pipe is closed")
 
+@app.route('/download<int:id>', methods=['GET', 'POST'])
+def download(id):
+    parts = jsonReader.instance["defaults"]["parts"]
+
+    if request.method == 'POST':
+        if id in processHandlers:
+            processHandlers[id].input(request.form["consoleInput"].encode("utf-8"))
+
+    return render_template("download.html", title="Probíhá stahování souboru",
+        parts=parts, allowSecond=True, titleSecondary="Console", id=str(id))
+
+
+@app.route('/startdownload', methods=['GET', 'POST'])
+def startdownload():
     parts = jsonReader.instance["defaults"]["parts"]
     url = jsonReader.instance["defaults"]["url"]
+    path = jsonReader.instance["paths"][jsonReader.instance["defaults"]["pathID"]]
 
-    if not processHandler.started:
-        processHandler.startProcess(url, parts)
-        processHandler.started = True
+    for p in processHandlers:
+        print(processHandlers[p].url)
+        if processHandlers[p].url == url:
+            return redirect(url_for("download", id=processHandlers[p].id))
 
-    return render_template("download.html", title="Probíhá stahování souboru", parts=parts, allowSecond=True, titleSecondary="Console")
+    newId = len(processHandlers)
+    processHandler = ProcessHandler()
+    processHandler.startProcess(url, parts, path, newId, captcha=True)
+    processHandlers[newId] = processHandler
+    return redirect(url_for("download", id=newId))
 
-@app.route('/line', methods=['POST'])
-def line():
+@app.route('/deleteDownload<int:id>', methods=['GET', 'POST'])
+def deleteDownload(id):
+    if id in processHandlers:
+        processHandlers[id].terminateProcess()
+        del processHandlers[id]
+
+    return redirect(url_for("index"))
+
+
+@app.route('/line<int:id>', methods=['POST'])
+def line(id):
     input_json = request.get_json(force=True)
-    processHandler.addLine(input_json["message"], input_json["y"])
+    processHandlers[id].addLine(f"{id}"+input_json["message"], input_json["y"])
     return ""
 
-@app.route('/text', methods=['GET'])
-def text():
-    ansi = processHandler.read()
-    html = conv.convert(ansi).replace('\\n','<br>')
+
+@app.route('/text<int:id>', methods=['GET'])
+def text(id):
+    if id not in processHandlers:
+        return "Download id doesn't exists"
+    ansi = processHandlers[id].read()
+    html = conv.convert(ansi).replace('\\n', '<br>')
     return html
+
 
 @app.route('/about')
 def about():

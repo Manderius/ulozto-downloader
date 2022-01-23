@@ -1,7 +1,9 @@
 {
     "paths": [
         "/media/Films",
-        "/media/TvShows"
+        "/media/TvShows",
+        "/media",
+        "/mnt/d/Videa"
     ],
     "defaults": {
         "url": "https://uloz.to/file/AJzTKD4XT/tom-a-jerry-0115-mys-kouzelnik-avi#!ZGRjZQR2ZGWyLGxkZQRkMQN5BQV0Z1ELARDjMTVlJHDhMQZlAj==",
@@ -9,6 +11,6 @@
         "auto-captcha": true,
         "parts": 15,
         "averageDownloadSpeed": 150,
-        "pathID": 1
+        "pathID": 3
     }
 }

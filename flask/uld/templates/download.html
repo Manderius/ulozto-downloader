@@ -9,13 +9,16 @@
 
 {%block anotherCard%}
 <div class="container">
-    <form action= {{url_for("download")}} method='POST'>
+    <form method='POST'>
         <divc class="row">
-                <div class="col-9">
+                <div class="col-lg-8 mt-1">
                     <input type="text" placeholder="Console input" class="form-control" id="consoleInput" name="consoleInput">
                 </div>
-                <div class="col-3">
-                    <button type="submit" class="col btn btn-secondary mb-2">Send to console</button>
+                <div class="col-lg-2 mt-1 p-0 text-center">
+                    <button type="submit" class="text-center btn btn-secondary mb-2 m-0">Send to console</button>
+                </div>
+                <div class="col-lg-2 mt-1 p-0 text-center">
+                    <button type="button" onclick="location.pathname='/deleteDownload{{id}}'" class="text-center btn btn-danger mb-2 m-0">Cancel download</button>
                 </div>
         </div>
     </form>

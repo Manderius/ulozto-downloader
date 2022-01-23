@@ -44,11 +44,7 @@ class Downloader:
         utils._print('End download monitor')
 
     def _captcha_print_func_wrapper(self, text):
-        if not self.cli_initialized:
-            sys.stdout.write(colors.blue(
-                "[Link solve]\t") + text + "\n")
-        else:
-            utils.print_captcha_status(text, self.parts)
+        utils.print_captcha_status(text, self.parts)
 
     def _captcha_breaker(self, page, parts):
         msg = ""
@@ -224,7 +220,6 @@ class Downloader:
                 utils._print(
                     "CAPTCHA protected download - CAPTCHA challenges will be displayed\n")
                 self.download_type = "CAPTCHA protected download"
-
             self.captcha_download_links_generator = page.captcha_download_links_generator(
                 captcha_solve_func=self.captcha_solve_func,
                 print_func=self._captcha_print_func_wrapper
@@ -233,7 +228,6 @@ class Downloader:
 
         head = requests.head(download_url, allow_redirects=True)
         total_size = int(head.headers['Content-Length'])
-
         try:
             file_data = SegFileLoader(output_filename, total_size, parts)
             downloads = file_data.make_writers()
@@ -245,7 +239,7 @@ class Downloader:
 
         # 2. Initialize cli status table interface
         # if windows, use 'cls', otherwise use 'clear'
-        os.system('cls' if os.name == 'nt' else 'clear')
+        # os.system('cls' if os.name == 'nt' else 'clear')
         self.cli_initialized = True
         page.cli_initialized = True  # for tor in Page
         utils._print(colors.blue("File:\t\t") + colors.bold(page.filename), y=1)

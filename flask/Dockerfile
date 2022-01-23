@@ -12,5 +12,8 @@ RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime \
 
 COPY ./uld/ /var/www/uld/
 COPY ./uld.conf /etc/apache2/sites-available/000-default.conf
+# flask has to have permissions to save film
+RUN chown -R www-data /var/www/uld \
+        && chown -R www-data /media
 EXPOSE 80
 CMD ["apache2ctl", "-D","FOREGROUND"]

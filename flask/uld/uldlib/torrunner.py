@@ -1,7 +1,7 @@
 import socket
 import stem.process
 from stem.control import Controller
-from .utils import print_tor_status
+from .utils import print_tor_status, _print
 import os
 import uuid
 import shutil
@@ -47,13 +47,7 @@ class TorRunner:
         def print_cli_wrapper(line):
             return print_tor_status(line, parts)
 
-        def print_no_cli(line):
-            return print(line, end="\r")
-
-        if cli_initialized:
-            print_func = print_cli_wrapper
-        else:
-            print_func = print_no_cli
+        print_func = print_cli_wrapper
 
         def get_tor_ready(line):
             p = re.compile(r'Bootstrapped \d+%')
@@ -75,12 +69,12 @@ class TorRunner:
 
     def stop(self):
         if hasattr(self, "process"):
-            print("Terminating tor..")
+            _print("Terminating tor..")
             self.process.terminate()
 
         if os.path.exists(self.ddir):
             shutil.rmtree(self.ddir, ignore_errors=True)
-            print(f"Removed tor data dir: {self.ddir}")
+            _print(f"Removed tor data dir: {self.ddir}")
 
     def __del__(self):
         self.stop()

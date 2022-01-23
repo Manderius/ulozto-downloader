@@ -22,6 +22,9 @@ def run():
                         help='Try to solve captchas automatically using TensorFlow')
     parser.add_argument('--version', action='version', version=__version__)
 
+    parser.add_argument('--id', metavar='ID', type=int, default=-1,
+                        help='Id of process')
+
     args = parser.parse_args()
     if args.auto_captcha:
         model_path = path.join(__path__[0], "model.tflite")
@@ -41,5 +44,6 @@ def run():
 
     signal.signal(signal.SIGINT, sigint_handler)
 
+    utils.ProcessID.id = args.id
     d.download(args.url, args.parts, args.output)
     d.terminate()
