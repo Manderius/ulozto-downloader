@@ -182,7 +182,6 @@ def startdownload():
 def deleteDownload(id):
     if id in processHandlers:
         processHandlers[id].terminateProcess()
-        del processHandlers[id]
 
     return redirect(url_for("index"))
 
