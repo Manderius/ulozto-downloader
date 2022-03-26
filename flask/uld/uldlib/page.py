@@ -52,6 +52,7 @@ class Page:
         self.target_dir = target_dir
         self.parts = parts
         self.tor = tor
+        self.size = 0
         parsed_url = urlparse(url)
         self.pagename = parsed_url.hostname.capitalize()
         self.cli_initialized = False
@@ -129,6 +130,18 @@ class Page:
             download_found = True
             self.captchaURL = self.baseURL + self.captchaURL
         self.slowDownloadURL = self.captchaURL
+
+        size = parse_single(self.body, r'info-media t-file-info-strip">[\s\S]*Velikost</span>\s*(.*)<').split()
+        sizeBytes = float(size[0])
+        if size[1] == 'GB':
+            sizeBytes = sizeBytes * 1000
+            size[1] = 'MB'
+        if size[1] == 'MB':
+            sizeBytes = sizeBytes * 1000
+            size[1] = 'KB'
+        if size[1] == 'KB':
+            sizeBytes = sizeBytes * 1000
+        self.size = sizeBytes
 
         # Check if slowDirectDownload or form data for CAPTCHA was parsed
         if not download_found:

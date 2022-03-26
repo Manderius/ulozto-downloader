@@ -164,6 +164,15 @@ class Downloader:
         # reuse download link if need
         download_url_queue.put(part.download_url)
 
+    @staticmethod
+    def _get_best_parts_amount(sizeBytes):
+        import math
+        size = sizeBytes / 1024 ** 2
+        startup = 4.5
+        speed = 0.18
+        amount = math.sqrt(size / (startup * speed))
+        return math.floor(amount) if size > 10 else 3
+
     def download(self, url, parts, target_dir=""):
         """Download file from Uloz.to using multiple parallel downloads.
             Arguments:
@@ -172,7 +181,7 @@ class Downloader:
                 target_dir (str): Directory where the download should be saved (default: current directory)
         """
         self.url = url
-        self.parts = parts
+        self.parts = 0
         self.processes = []
         self.captcha_process = None
         self.target_dir = target_dir
@@ -190,8 +199,11 @@ class Downloader:
 
         try:
             tor = TorRunner()
-            page = Page(url, target_dir, parts, tor)
+            page = Page(url, target_dir, 0, tor)
             page.parse()
+            parts = Downloader._get_best_parts_amount(page.size)
+            self.parts = parts
+            page.parts = parts
 
         except RuntimeError as e:
             utils._print(colors.red('Cannot download file: ' + str(e)))

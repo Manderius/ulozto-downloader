@@ -57,7 +57,7 @@ class ProcessHandler():
         self.id = processId
         workingDir = os.path.abspath(os.path.dirname(__file__))
         self.currentOutput = {"start": [], "middle": {}, "end": []}
-        self.setStatus({'id': processId, 'filename': url, 'downloadedSize': 0, 'totalSize': 0, 'percent': 0, 'avgSpeed': 0,
+        self.setStatus({'id': processId, 'filename': 'Zahajuji stahování...', 'downloadedSize': 0, 'totalSize': 0, 'percent': 0, 'avgSpeed': 0,
                     'currSpeed': 0, 'remainingTime': '0:00:00'})
         self.process = subprocess.Popen(
             [f"exec python {os.path.join(workingDir, 'ulozto-downloader.py')} --auto-captcha --output {path} --id {processId} {url}"],
