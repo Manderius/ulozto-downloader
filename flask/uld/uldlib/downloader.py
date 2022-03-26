@@ -163,7 +163,7 @@ class Downloader:
         # reuse download link if need
         download_url_queue.put(part.download_url)
 
-    def download(self, url, parts=10, target_dir=""):
+    def download(self, url, parts, target_dir=""):
         """Download file from Uloz.to using multiple parallel downloads.
             Arguments:
                 url (str): URL of the Uloz.to file to download
