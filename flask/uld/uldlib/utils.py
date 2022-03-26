@@ -31,7 +31,7 @@ def print_saved_status(text, parts):
     _print(colors.yellow(f"[Progress]\t {text}"),
            y=(parts + 1 + const.CLI_STATUS_STARTLINE))
 
-def report_saved_status(size, percent, averageSpeed, currentSpeed, remainingTime, numParts):
+def report_saved_status(size, totalSize, percent, averageSpeed, currentSpeed, remainingTime, numParts):
     print_saved_status(
         f"{size:.2f} MB"
         f" ({percent:.2f}) %"
@@ -40,7 +40,7 @@ def report_saved_status(size, percent, averageSpeed, currentSpeed, remainingTime
         f"\tremaining: {remainingTime}",
         numParts
     )
-    dictToSend = {'totalSize': size, 'percent': percent, 'avgSpeed': averageSpeed,
+    dictToSend = {'downloadedSize': size, 'totalSize': totalSize, 'percent': percent, 'avgSpeed': averageSpeed,
                     'currSpeed': currentSpeed, 'remainingTime': str(remainingTime)}
     res = requests.post(f'http://localhost:5000/status/{ProcessID.id}', json=dictToSend)
 

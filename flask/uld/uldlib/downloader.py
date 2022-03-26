@@ -83,7 +83,9 @@ class Downloader:
 
             remaining = (size - s) / total_bps if total_bps > 0 else 0
 
-            utils.report_saved_status((s / 1024 ** 2),
+            utils.report_saved_status(filename,
+                                    (s / 1024 ** 2),
+                                    size,
                                     (s / size * 100),
                                     (total_bps / 1024 ** 2),
                                     (now_bps / 1024 ** 2),
@@ -343,7 +345,7 @@ class Downloader:
             str(timedelta(seconds=round(elapsed))),
             round(speed / 1024**2, 2)
         ))
-        utils.report_saved_status(total_size, 100, round(speed / 1024**2, 2), 0, 0, self.parts)
+        utils.report_saved_status(page.filename, total_size, total_size, 100, round(speed / 1024**2, 2), 0, 0, self.parts)
         # remove resume .udown file
         udown_file = output_filename + DOWNPOSTFIX
         if os.path.exists(udown_file):
