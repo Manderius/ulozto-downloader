@@ -8,10 +8,22 @@
 
     {{ form.submit(class="btn btn-secondary mt-5") }}
 </form>
-<div class="row">
-    <div id="overview" class="col">  
-    </div>
-</div>
+<h5 class="mt-4">Stahované soubory</h5>
+<table class="table">
+  <thead class="table-light">
+    <tr>
+      <th scope="col">Název souboru</th>
+      <th scope="col">Postup</th>
+      <th scope="col"></th>
+      <th scope="col">Velikost</th>
+      <th scope="col">Rychlost</th>
+      <th scope="col">Odhadovaný čas</th>
+    </tr>
+  </thead>
+  <tbody id="files">
+  </tbody>
+</table>
+
 
 <script src="{{ url_for('static', filename='index.js') }}"></script>
 {%endblock%}

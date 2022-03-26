@@ -40,7 +40,7 @@ def report_saved_status(filename, size, totalSize, percent, averageSpeed, curren
         f"\tremaining: {remainingTime}",
         numParts
     )
-    dictToSend = {'filename': filename, 'downloadedSize': size, 'totalSize': totalSize, 'percent': percent, 'avgSpeed': averageSpeed,
+    dictToSend = {'id': ProcessID.id, 'filename': filename, 'downloadedSize': size, 'totalSize': totalSize, 'percent': percent, 'avgSpeed': averageSpeed,
                     'currSpeed': currentSpeed, 'remainingTime': str(remainingTime)}
     res = requests.post(f'http://localhost:5000/status/{ProcessID.id}', json=dictToSend)
 

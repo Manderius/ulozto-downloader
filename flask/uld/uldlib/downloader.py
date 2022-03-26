@@ -59,9 +59,9 @@ class Downloader:
             self.download_url_queue.put(url)
 
     @staticmethod
-    def _save_progress(filename, parts, size, interval_sec):
+    def _save_progress(filename, path, parts, size, interval_sec):
 
-        m = SegFileMonitor(filename, utils.print_saved_status, interval_sec)
+        m = SegFileMonitor(path, utils.print_saved_status, interval_sec)
 
         t_start = time.time()
         s_start = m.size()
@@ -91,14 +91,7 @@ class Downloader:
                                     (now_bps / 1024 ** 2),
                                     timedelta(seconds=round(remaining)),
                                     parts)
-            # utils.print_saved_status(
-            #     f"{(s / 1024 ** 2):.2f} MB"
-            #     f" ({(s / size * 100):.2f} %)"
-            #     f"\tavg. speed: {(total_bps / 1024 ** 2):.2f} MB/s"
-            #     f"\tcurr. speed: {(now_bps / 1024 ** 2):.2f} MB/s"
-            #     f"\tremaining: {timedelta(seconds=round(remaining))}",
-            #     parts
-            # )
+                                    
 
     @staticmethod
     def _download_part(part, download_url_queue):
@@ -282,7 +275,7 @@ class Downloader:
 
         # save status monitor
         self.monitor = mp.Process(target=Downloader._save_progress, args=(
-            file_data.filename, file_data.parts, file_data.size, 1/3))
+            page.filename, file_data.filename, file_data.parts, file_data.size, 1/3))
         self.monitor.start()
 
         # 3. Start all downloads fill self.processes

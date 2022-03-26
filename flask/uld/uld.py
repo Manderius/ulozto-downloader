@@ -14,7 +14,7 @@ from datetime import datetime
 
 class URLForm(FlaskForm):
     url = StringField("", [InputRequired()])
-    submit = SubmitField("Odeslat")
+    submit = SubmitField("Stáhnout")
 
 
 class JsonReader():
