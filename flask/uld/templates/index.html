@@ -3,20 +3,27 @@
 <form method="POST" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
 
-    <div class="form-label mt-3">Url z <a href="https://uloz.to/" target="_blank" rel="noopener noreferrer">Uložto</a></div>
+    <div class="form-label mt-3">Adresa z <a href="https://uloz.to/" target="_blank" rel="noopener noreferrer">Ulož to</a>:</div>
     {{ form.url(class="form-control") }}
-
-    {{ form.parts.label(class="form-label mt-3") }}
-    {{ form.parts(class="form-control") }}
-
-    <div class="form-check mt-3">
-        {{ form.autoCaptcha(class="form-check-input") }}
-        {{ form.autoCaptcha.label(class="form-check-label") }}
-    </div>
-
-    {{ form.path.label(class="form-label mt-3") }}
-    {{ form.path(class="form-select") }}
 
     {{ form.submit(class="btn btn-secondary mt-5") }}
 </form>
+<h5 class="mt-4">Stahované soubory</h5>
+<table class="table">
+  <thead class="table-light">
+    <tr>
+      <th scope="col">Název souboru</th>
+      <th scope="col">Postup</th>
+      <th scope="col"></th>
+      <th scope="col">Velikost</th>
+      <th scope="col">Rychlost</th>
+      <th scope="col">Čas</th>
+    </tr>
+  </thead>
+  <tbody id="files">
+  </tbody>
+</table>
+
+
+<script src="{{ url_for('static', filename='index.js') }}"></script>
 {%endblock%}

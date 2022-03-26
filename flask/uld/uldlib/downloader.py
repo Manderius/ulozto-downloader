@@ -59,9 +59,9 @@ class Downloader:
             self.download_url_queue.put(url)
 
     @staticmethod
-    def _save_progress(filename, parts, size, interval_sec):
+    def _save_progress(filename, path, parts, size, interval_sec):
 
-        m = SegFileMonitor(filename, utils.print_saved_status, interval_sec)
+        m = SegFileMonitor(path, utils.print_saved_status, interval_sec)
 
         t_start = time.time()
         s_start = m.size()
@@ -83,14 +83,15 @@ class Downloader:
 
             remaining = (size - s) / total_bps if total_bps > 0 else 0
 
-            utils.print_saved_status(
-                f"{(s / 1024 ** 2):.2f} MB"
-                f" ({(s / size * 100):.2f} %)"
-                f"\tavg. speed: {(total_bps / 1024 ** 2):.2f} MB/s"
-                f"\tcurr. speed: {(now_bps / 1024 ** 2):.2f} MB/s"
-                f"\tremaining: {timedelta(seconds=round(remaining))}",
-                parts
-            )
+            utils.report_saved_status(filename,
+                                    (s / 1024 ** 2),
+                                    (size / 1024 ** 2),
+                                    (s / size * 100),
+                                    (total_bps / 1024 ** 2),
+                                    (now_bps / 1024 ** 2),
+                                    timedelta(seconds=round(remaining)),
+                                    parts)
+
 
     @staticmethod
     def _download_part(part, download_url_queue):
@@ -163,7 +164,16 @@ class Downloader:
         # reuse download link if need
         download_url_queue.put(part.download_url)
 
-    def download(self, url, parts=10, target_dir=""):
+    @staticmethod
+    def _get_best_parts_amount(sizeBytes):
+        import math
+        size = sizeBytes / 1024 ** 2
+        startup = 4.5
+        speed = 0.18
+        amount = math.sqrt(size / (startup * speed))
+        return math.floor(amount) if size > 10 else 3
+
+    def download(self, url, parts, target_dir=""):
         """Download file from Uloz.to using multiple parallel downloads.
             Arguments:
                 url (str): URL of the Uloz.to file to download
@@ -171,7 +181,7 @@ class Downloader:
                 target_dir (str): Directory where the download should be saved (default: current directory)
         """
         self.url = url
-        self.parts = parts
+        self.parts = 0
         self.processes = []
         self.captcha_process = None
         self.target_dir = target_dir
@@ -189,8 +199,11 @@ class Downloader:
 
         try:
             tor = TorRunner()
-            page = Page(url, target_dir, parts, tor)
+            page = Page(url, target_dir, 0, tor)
             page.parse()
+            parts = Downloader._get_best_parts_amount(page.size)
+            self.parts = parts
+            page.parts = parts
 
         except RuntimeError as e:
             utils._print(colors.red('Cannot download file: ' + str(e)))
@@ -274,7 +287,7 @@ class Downloader:
 
         # save status monitor
         self.monitor = mp.Process(target=Downloader._save_progress, args=(
-            file_data.filename, file_data.parts, file_data.size, 1/3))
+            page.filename, file_data.filename, file_data.parts, file_data.size, 1))
         self.monitor.start()
 
         # 3. Start all downloads fill self.processes
@@ -337,8 +350,13 @@ class Downloader:
             str(timedelta(seconds=round(elapsed))),
             round(speed / 1024**2, 2)
         ))
+        utils.report_saved_status(page.filename, total_size / 1024**2, total_size / 1024**2, 100, round(speed / 1024**2, 2), 0, 'Hotovo', self.parts)
         # remove resume .udown file
         udown_file = output_filename + DOWNPOSTFIX
         if os.path.exists(udown_file):
             utils._print(f"Delete file: {udown_file}")
             os.remove(udown_file)
+        ucache_file = page.linkCache.cachefile
+        if os.path.exists(ucache_file):
+            utils._print(f"Delete file: {ucache_file}")
+            os.remove(ucache_file)

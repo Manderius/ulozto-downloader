@@ -22,8 +22,7 @@ def run():
                         help='Try to solve captchas automatically using TensorFlow')
     parser.add_argument('--version', action='version', version=__version__)
 
-    parser.add_argument('--id', metavar='ID', type=int, default=-1,
-                        help='Id of process')
+    parser.add_argument('--id', metavar='ID', help='Id of process', type=str, default='')
 
     args = parser.parse_args()
     if args.auto_captcha:
