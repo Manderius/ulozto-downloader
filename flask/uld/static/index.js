@@ -45,16 +45,17 @@ function createNode(htmlString) {
 function set(text) {
     var tbody = document.getElementById("files");
     console.log(text)
+    if (text.length == 0) return;
     for (var file of text) {
     	if (!(file.id in rows)) {
     		createRow(file.id);
     	}
-      console.log(file)
-    	setInnerHtml(file.id, 'filename', file.filename)
-      setProgress(file.id, file.percent)
-      setSize(file.id, file.downloadedSize, file.totalSize)
-      setInnerHtml(file.id, 'speed', (file.currSpeed.toFixed(3)) + " MB/s")
-      setInnerHtml(file.id, 'time', file.remainingTime)
+        console.log(file)
+        setInnerHtml(file.id, 'filename', file.filename)
+        setProgress(file.id, file.percent)
+        setSize(file.id, file.downloadedSize, file.totalSize)
+        setInnerHtml(file.id, 'speed', (file.currSpeed.toFixed(3)) + " MB/s")
+        setInnerHtml(file.id, 'time', file.remainingTime)
     }
     
 }
