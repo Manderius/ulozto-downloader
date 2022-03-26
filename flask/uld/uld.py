@@ -6,17 +6,13 @@ import sys
 from ansi2html import Ansi2HTMLConverter
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_wtf import FlaskForm
-from wtforms import (BooleanField, IntegerField, SelectField, StringField,
-                     SubmitField)
+from wtforms import (StringField, SubmitField)
 from wtforms.validators import InputRequired
 from datetime import datetime
 
 
 class URLForm(FlaskForm):
     url = StringField("", [InputRequired()])
-    parts = IntegerField('Počet částí', [InputRequired()])
-    autoCaptcha = BooleanField('Povolte automatické čtení CAPTCHA')
-    path = SelectField("Výběr pořadí", [InputRequired()])
     submit = SubmitField("Odeslat")
 
 
@@ -54,13 +50,13 @@ class ProcessHandler():
         self.currentOutput = {"start": [], "middle": {}, "end": []}
         self.url = None
 
-    def startProcess(self, url, parts, path, processId, captcha=True):
+    def startProcess(self, url, path, processId):
         self.url = url
         self.id = processId
         workingDir = os.path.abspath(os.path.dirname(__file__))
         self.currentOutput = {"start": [], "middle": {}, "end": []}
         self.process = subprocess.Popen(
-            [f"python {os.path.join(workingDir, 'ulozto-downloader.py')} --auto-captcha --parts {parts} --output {path} --id {processId} {url}"],
+            [f"python {os.path.join(workingDir, 'ulozto-downloader.py')} --auto-captcha --output {path} --id {processId} {url}"],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, shell=True, close_fds=True)
 
     def terminateProcess(self):
@@ -124,57 +120,49 @@ except PermissionError:
 @app.route('/', methods=['GET', 'POST'])
 def index():
     form = URLForm()
-    setChoices(form)
+    #setChoices(form)
     flashFormErrors(form)
     if form.validate_on_submit():
         jsonReader._instance["defaults"]["url"] = form.url.data
-        jsonReader._instance["defaults"]["auto-captcha"] = form.autoCaptcha.data
-        jsonReader._instance["defaults"]["parts"] = form.parts.data
-        jsonReader._instance["defaults"]["pathID"] = int(form.path.data)
         jsonReader.save()
         return redirect(url_for("startdownload"))
 
     form.url.data = jsonReader.instance["defaults"]["url"]
-    form.autoCaptcha.data = jsonReader.instance["defaults"]["auto-captcha"]
-    form.parts.data = jsonReader.instance["defaults"]["parts"]
-    return render_template("index.html", form=form, title="Zadejte data")
+    return render_template("index.html", form=form, title="Zadejte adresu souboru")
 
 
-def setChoices(form):
-    defaultID = jsonReader.instance["defaults"]["pathID"]
-    paths = jsonReader.instance["paths"]
-    form.path.choices = [(i, paths[i])
-                         for i in range(len(paths)) if i != defaultID]
-    if defaultID != "":
-        form.path.choices = [(defaultID, paths[defaultID])]+form.path.choices
+# def setChoices(form):
+#     defaultID = jsonReader.instance["defaults"]["pathID"]
+#     paths = jsonReader.instance["paths"]
+#     form.path.choices = [(i, paths[i])
+#                          for i in range(len(paths)) if i != defaultID]
+#     if defaultID != "":
+#         form.path.choices = [(defaultID, paths[defaultID])]+form.path.choices
 
 
 @app.route('/download<int:id>', methods=['GET', 'POST'])
 def download(id):
-    parts = jsonReader.instance["defaults"]["parts"]
-
     if request.method == 'POST':
         if id in processHandlers:
             processHandlers[id].input(request.form["consoleInput"].encode("utf-8"))
 
     return render_template("download.html", title="Probíhá stahování souboru",
-        parts=parts, allowSecond=True, titleSecondary="Console", id=str(id))
+        allowSecond=True, titleSecondary="Console", id=str(id))
 
 
 @app.route('/startdownload', methods=['GET', 'POST'])
 def startdownload():
-    parts = jsonReader.instance["defaults"]["parts"]
     url = jsonReader.instance["defaults"]["url"]
-    path = jsonReader.instance["paths"][jsonReader.instance["defaults"]["pathID"]]
+    path = jsonReader.instance["paths"][0]
 
     for p in processHandlers:
-        print(processHandlers[p].url)
+        #print(processHandlers[p].url)
         if processHandlers[p].url == url:
             return redirect(url_for("download", id=processHandlers[p].id))
 
     newId = len(processHandlers)
     processHandler = ProcessHandler()
-    processHandler.startProcess(url, parts, path, newId, captcha=True)
+    processHandler.startProcess(url, path, newId)
     processHandlers[newId] = processHandler
     return redirect(url_for("download", id=newId))
 

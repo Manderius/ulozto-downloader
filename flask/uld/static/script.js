@@ -1,4 +1,4 @@
-setInterval(function() { set(httpGet()); console.log("reloaded");},100);
+setInterval(function() { set(httpGet()); console.log("reloaded");}, 500);
 function httpGet()
 {
     var xmlHttp = new XMLHttpRequest();
