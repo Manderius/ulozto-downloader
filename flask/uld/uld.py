@@ -201,8 +201,8 @@ def status(id):
 
 @app.route('/status', methods=['GET'])
 def status_all():
-    result = map(lambda v: v.getStatus(), processHandlers.values())
-    return result
+    result = [a for a in map(lambda v: v.getStatus(), processHandlers.values())]
+    return json.dumps(result)
 
 @app.route('/text/<id>', methods=['GET'])
 def text(id):
