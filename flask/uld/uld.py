@@ -155,7 +155,7 @@ def download(id):
             processHandlers[id].input(request.form["consoleInput"].encode("utf-8"))
 
     return render_template("download.html", title="Detaily stahování souboru",
-        allowSecond=True, titleSecondary="Console", id=str(id))
+        allowSecond=True, titleSecondary="Konzole", id=str(id))
 
 
 @app.route('/startdownload', methods=['GET', 'POST'])
