@@ -136,7 +136,6 @@ def index():
         jsonReader.save()
         return redirect(url_for("startdownload"))
 
-    form.url.data = jsonReader.instance["defaults"]["url"]
     return render_template("index.html", form=form, title="Zadejte adresu souboru")
 
 
@@ -155,7 +154,7 @@ def download(id):
         if id in processHandlers:
             processHandlers[id].input(request.form["consoleInput"].encode("utf-8"))
 
-    return render_template("download.html", title="Probíhá stahování souboru",
+    return render_template("download.html", title="Detaily stahování souboru",
         allowSecond=True, titleSecondary="Console", id=str(id))
 
 
@@ -173,7 +172,7 @@ def startdownload():
     processHandler = ProcessHandler()
     processHandler.startProcess(url, path, newId)
     processHandlers[newId] = processHandler
-    return redirect(url_for("download", id=newId))
+    return redirect(url_for("index"))
 
 @app.route('/cancelDownload/<id>', methods=['GET', 'POST'])
 def deleteDownload(id):
@@ -187,7 +186,7 @@ def deleteDownload(id):
 @app.route('/line/<id>', methods=['POST'])
 def line(id):
     input_json = request.get_json(force=True)
-    processHandlers[id].addLine(f"{id}"+input_json["message"], input_json["y"])
+    processHandlers[id].addLine(input_json["message"], input_json["y"])
     return ""
 
 @app.route('/status/<id>', methods=['GET', 'POST'])
