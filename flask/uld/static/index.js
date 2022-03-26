@@ -4,6 +4,7 @@ function httpGet()
 {
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "GET", "/status", true ); // false for synchronous request
+    xmlHttp.responseType = 'json';
     xmlHttp.onload = function() {
         set(xmlHttp.response);
     }
@@ -15,7 +16,7 @@ rows = {}
 function createRow(id) {
     const template = `<tr>
         <td id="${id}_filename">Zahajuji stahování...</td>
-        <td>
+        <td class="align-middle">
             <div class="progress">
                 <div class="progress-bar position-relative" role="progressbar"
                 aria-valuemin="0" aria-valuemax="100" style="width: 0%" id="${id}_progress">
@@ -29,7 +30,8 @@ function createRow(id) {
     </tr>`;
 	row = createNode(template);
     rows[id] = row;
-    row.firstChild.onclick = function () {
+    row.firstElementChild.style.cursor = 'pointer';
+    row.firstElementChild.onclick = function () {
         window.location = "/download/" + id; 
     }
     var tbody = document.getElementById("files");
@@ -70,9 +72,8 @@ function setProgress(id, percent) {
 }
 
 function setSize(id, downSize, totalSize) {
-    bytesToMB = 1024 * 1024;
     dSize = Math.floor(downSize)
-    tSize = Math.floor(totalSize / bytesToMB)
+    tSize = Math.floor(totalSize)
     setInnerHtml(id, 'size', `${dSize} / ${tSize} MB`)
 }
 
