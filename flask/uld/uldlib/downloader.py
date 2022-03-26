@@ -287,7 +287,7 @@ class Downloader:
 
         # save status monitor
         self.monitor = mp.Process(target=Downloader._save_progress, args=(
-            page.filename, file_data.filename, file_data.parts, file_data.size, 1/3))
+            page.filename, file_data.filename, file_data.parts, file_data.size, 1))
         self.monitor.start()
 
         # 3. Start all downloads fill self.processes
