@@ -6,19 +6,10 @@ import requests
 class ProcessID():
     id = None
 
-# f = open("output.txt", "w")
 def _print(text, x=0, y=0, end=""):
-    # f.write(f"{x} {y} {text}{end}\n")
-    # f.flush()
-
-    # sys.stdout.write("\033[{};{}H".format(y, x))
-    # sys.stdout.write("\033[K")
     dictToSend = {'message':text, "y":y, "x":x}
     res = requests.post(f'http://localhost:5000/line{ProcessID.id}', json=dictToSend)
-    #print(res)
-    # sys.stdout.write(f"{x} {y} {text}{end}\n")
-    # sys.stdout.flush()
-    pass
+
 
 
 def print_part_status(id, text):
@@ -49,7 +40,7 @@ def report_saved_status(size, percent, averageSpeed, currentSpeed, remainingTime
         f"\tremaining: {remainingTime}",
         numParts
     )
-    dictToSend = {'totalSize':size, 'percent': percent, 'avgSpeed': averageSpeed,
-                    'currSpeed': currentSpeed, 'remainingTime': remainingTime}
+    dictToSend = {'totalSize': size, 'percent': percent, 'avgSpeed': averageSpeed,
+                    'currSpeed': currentSpeed, 'remainingTime': str(remainingTime)}
     res = requests.post(f'http://localhost:5000/status{ProcessID.id}', json=dictToSend)
 

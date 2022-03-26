@@ -343,8 +343,13 @@ class Downloader:
             str(timedelta(seconds=round(elapsed))),
             round(speed / 1024**2, 2)
         ))
+        utils.report_saved_status(total_size, 100, round(speed / 1024**2, 2), 0, 0, self.parts)
         # remove resume .udown file
         udown_file = output_filename + DOWNPOSTFIX
         if os.path.exists(udown_file):
             utils._print(f"Delete file: {udown_file}")
             os.remove(udown_file)
+        ucache_file = page.linkCache.cachefile
+        if os.path.exists(ucache_file):
+            utils._print(f"Delete file: {ucache_file}")
+            os.remove(ucache_file)
