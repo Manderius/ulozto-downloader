@@ -2,6 +2,7 @@ import json
 import os
 import subprocess
 import sys
+import signal
 
 from ansi2html import Ansi2HTMLConverter
 from flask import Flask, flash, redirect, render_template, request, url_for
@@ -57,11 +58,11 @@ class ProcessHandler():
         workingDir = os.path.abspath(os.path.dirname(__file__))
         self.currentOutput = {"start": [], "middle": {}, "end": []}
         self.process = subprocess.Popen(
-            [f"python {os.path.join(workingDir, 'ulozto-downloader.py')} --auto-captcha --output {path} --id {processId} {url}"],
+            [f"exec python {os.path.join(workingDir, 'ulozto-downloader.py')} --auto-captcha --output {path} --id {processId} {url}"],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, shell=True, close_fds=True)
 
     def terminateProcess(self):
-        self.process.terminate()
+        self.process.send_signal(signal.SIGINT)
 
     def addLine(self, line, y):
         if y == 0:
@@ -177,6 +178,8 @@ def startdownload():
 def deleteDownload(id):
     if id in processHandlers:
         processHandlers[id].terminateProcess()
+        processHandlers['terminated'+id] = processHandlers[id]
+        delattr(processHandlers, id)
 
     return redirect(url_for("index"))
 
