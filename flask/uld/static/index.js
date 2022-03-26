@@ -1,16 +1,13 @@
-//setInterval(function() { set(httpGet()); console.log("reloaded");}, 5000);
-// function httpGet()
-// {
-//     return [{"id": "grefdsa", "filename": "Avengers-2-Vek-Ultrona-Avengers-Age-of-Ultron-2015-CZ-dabing.avi", "downloadedSize": 54454746.57421875, "totalSize": 785254544, "percent": 28.4772770853268695, "avgSpeed": 0.4889176436685756, "currSpeed": 0.6533434213073841, "remainingTime": "0:25:24"}];
-// }
+setInterval(function() { httpGet(); }, 1000);
 
-setInterval(function() { set(httpGet()); console.log("reloaded");}, 1000);
 function httpGet()
 {
     var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "GET", "/status", false ); // false for synchronous request
+    xmlHttp.open( "GET", "/status", true ); // false for synchronous request
+    xmlHttp.onload = function() {
+        set(xmlHttp.response);
+    }
     xmlHttp.send( null );
-    return xmlHttp.response;
 }
 
 rows = {}
@@ -31,9 +28,12 @@ function createRow(id) {
         <td id="${id}_time">0:00:00</td>
     </tr>`;
 	row = createNode(template);
-  rows[id] = row;
-  var tbody = document.getElementById("files");
-  tbody.appendChild(row)
+    rows[id] = row;
+    row.firstChild.onclick = function () {
+        window.location = "/download/" + id; 
+    }
+    var tbody = document.getElementById("files");
+    tbody.appendChild(row);
 }
 
 function createNode(htmlString) {
@@ -43,21 +43,24 @@ function createNode(htmlString) {
 }
 
 function set(text) {
-    var tbody = document.getElementById("files");
-    console.log(text)
-    if (text.length == 0) return;
     for (var file of text) {
     	if (!(file.id in rows)) {
     		createRow(file.id);
     	}
-        console.log(file)
-        setInnerHtml(file.id, 'filename', file.filename)
+        setInnerHtml(file.id, 'filename', trimFileName(file.filename))
         setProgress(file.id, file.percent)
         setSize(file.id, file.downloadedSize, file.totalSize)
         setInnerHtml(file.id, 'speed', (file.currSpeed.toFixed(3)) + " MB/s")
         setInnerHtml(file.id, 'time', file.remainingTime)
     }
-    
+}
+
+function trimFileName(filename) {
+    var max = 34;
+    if (filename.length > max + 6) {
+        return filename.substring(0, max) + "..." + filename.substring(filename.length - 3)
+    }
+    return filename;
 }
 
 function setProgress(id, percent) {
@@ -67,8 +70,8 @@ function setProgress(id, percent) {
 }
 
 function setSize(id, downSize, totalSize) {
-bytesToMB = 1024 * 1024;
-    dSize = Math.floor(downSize / bytesToMB)
+    bytesToMB = 1024 * 1024;
+    dSize = Math.floor(downSize)
     tSize = Math.floor(totalSize / bytesToMB)
     setInnerHtml(id, 'size', `${dSize} / ${tSize} MB`)
 }
@@ -76,5 +79,3 @@ bytesToMB = 1024 * 1024;
 function setInnerHtml(id, childId, value) {
 	document.getElementById(id + "_" + childId).innerHTML = value;
 }
-
-set(httpGet())
