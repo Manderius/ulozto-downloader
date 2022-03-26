@@ -128,7 +128,6 @@ except PermissionError:
 @app.route('/', methods=['GET', 'POST'])
 def index():
     form = URLForm()
-    #setChoices(form)
     flashFormErrors(form)
     if form.validate_on_submit():
         jsonReader._instance["defaults"]["url"] = form.url.data
@@ -139,16 +138,16 @@ def index():
     return render_template("index.html", form=form, title="Zadejte adresu souboru")
 
 
-# def setChoices(form):
-#     defaultID = jsonReader.instance["defaults"]["pathID"]
-#     paths = jsonReader.instance["paths"]
-#     form.path.choices = [(i, paths[i])
-#                          for i in range(len(paths)) if i != defaultID]
-#     if defaultID != "":
-#         form.path.choices = [(defaultID, paths[defaultID])]+form.path.choices
+def generateId():
+    import string
+    import random
+    alphabet = string.ascii_lowercase + string.digits
+    id = ''.join(random.choices(alphabet, k=8))
+    while id in processHandlers:
+        id = ''.join(random.choices(alphabet, k=8))
+    return id
 
-
-@app.route('/download<int:id>', methods=['GET', 'POST'])
+@app.route('/download/<id>', methods=['GET', 'POST'])
 def download(id):
     if request.method == 'POST':
         if id in processHandlers:
@@ -168,29 +167,28 @@ def startdownload():
         if processHandlers[p].url == url:
             return redirect(url_for("download", id=processHandlers[p].id))
 
-    newId = len(processHandlers)
+    newId = generateId()
     processHandler = ProcessHandler()
     processHandler.startProcess(url, path, newId)
     processHandlers[newId] = processHandler
     return redirect(url_for("download", id=newId))
 
-@app.route('/deleteDownload<int:id>', methods=['GET', 'POST'])
+@app.route('/cancelDownload/<id>', methods=['GET', 'POST'])
 def deleteDownload(id):
     if id in processHandlers:
         processHandlers[id].terminateProcess()
-        processHandlers['terminated'+id] = processHandlers[id]
         delattr(processHandlers, id)
 
     return redirect(url_for("index"))
 
 
-@app.route('/line<int:id>', methods=['POST'])
+@app.route('/line/<id>', methods=['POST'])
 def line(id):
     input_json = request.get_json(force=True)
     processHandlers[id].addLine(f"{id}"+input_json["message"], input_json["y"])
     return ""
 
-@app.route('/status<int:id>', methods=['GET', 'POST'])
+@app.route('/status/<id>', methods=['GET', 'POST'])
 def status(id):
     if request.method == 'POST':
         input_json = request.get_json(force=True)
@@ -199,7 +197,7 @@ def status(id):
     
     return processHandlers[id].getStatus()
 
-@app.route('/text<int:id>', methods=['GET'])
+@app.route('/text/<id>', methods=['GET'])
 def text(id):
     if id not in processHandlers:
         return "Download id doesn't exists"

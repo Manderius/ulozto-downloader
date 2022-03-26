@@ -8,7 +8,7 @@ class ProcessID():
 
 def _print(text, x=0, y=0, end=""):
     dictToSend = {'message':text, "y":y, "x":x}
-    res = requests.post(f'http://localhost:5000/line{ProcessID.id}', json=dictToSend)
+    res = requests.post(f'http://localhost:5000/line/{ProcessID.id}', json=dictToSend)
 
 
 
@@ -42,5 +42,5 @@ def report_saved_status(size, percent, averageSpeed, currentSpeed, remainingTime
     )
     dictToSend = {'totalSize': size, 'percent': percent, 'avgSpeed': averageSpeed,
                     'currSpeed': currentSpeed, 'remainingTime': str(remainingTime)}
-    res = requests.post(f'http://localhost:5000/status{ProcessID.id}', json=dictToSend)
+    res = requests.post(f'http://localhost:5000/status/{ProcessID.id}', json=dictToSend)
 
