@@ -83,14 +83,20 @@ class Downloader:
 
             remaining = (size - s) / total_bps if total_bps > 0 else 0
 
-            utils.print_saved_status(
-                f"{(s / 1024 ** 2):.2f} MB"
-                f" ({(s / size * 100):.2f} %)"
-                f"\tavg. speed: {(total_bps / 1024 ** 2):.2f} MB/s"
-                f"\tcurr. speed: {(now_bps / 1024 ** 2):.2f} MB/s"
-                f"\tremaining: {timedelta(seconds=round(remaining))}",
-                parts
-            )
+            utils.report_saved_status((s / 1024 ** 2),
+                                    (s / size * 100),
+                                    (total_bps / 1024 ** 2),
+                                    (now_bps / 1024 ** 2),
+                                    timedelta(seconds=round(remaining)),
+                                    parts)
+            # utils.print_saved_status(
+            #     f"{(s / 1024 ** 2):.2f} MB"
+            #     f" ({(s / size * 100):.2f} %)"
+            #     f"\tavg. speed: {(total_bps / 1024 ** 2):.2f} MB/s"
+            #     f"\tcurr. speed: {(now_bps / 1024 ** 2):.2f} MB/s"
+            #     f"\tremaining: {timedelta(seconds=round(remaining))}",
+            #     parts
+            # )
 
     @staticmethod
     def _download_part(part, download_url_queue):

@@ -49,6 +49,7 @@ class ProcessHandler():
         self.process = None
         self.currentOutput = {"start": [], "middle": {}, "end": []}
         self.url = None
+        self.status = {}
 
     def startProcess(self, url, path, processId):
         self.url = url
@@ -96,6 +97,12 @@ class ProcessHandler():
                 print("pipe is closed")
         else:
             print("process isn't started")
+
+    def setStatus(self, status):
+        self.status = status
+
+    def getStatus(self):
+        return self.status
 
 
 app = Flask(__name__)
@@ -180,6 +187,14 @@ def line(id):
     processHandlers[id].addLine(f"{id}"+input_json["message"], input_json["y"])
     return ""
 
+@app.route('/status<int:id>', methods=['GET', 'POST'])
+def status(id):
+    if request.method == 'POST':
+        input_json = request.get_json(force=True)
+        processHandlers[id].setStatus(input_json)
+        return ""
+    
+    return processHandlers[id].getStatus()
 
 @app.route('/text<int:id>', methods=['GET'])
 def text(id):
