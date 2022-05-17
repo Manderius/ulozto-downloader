@@ -6,11 +6,15 @@ import requests
 class ProcessID():
     id = None
 
-def _print(text, x=0, y=0, end=""):
+def _print(text, x=0, y=0):
     dictToSend = {'message':text, "y":y, "x":x}
-    res = requests.post(f'http://localhost:5000/line/{ProcessID.id}', json=dictToSend)
+    _send_post(f'line/{ProcessID.id}', dictToSend, (0.2, 0.2))
 
-
+def _send_post(relative_url, json, timeout=(1, 1)):
+    try:
+        return requests.post(f'http://localhost:5000/{relative_url}', json=json, timeout=timeout)
+    except:
+        return None
 
 def print_part_status(id, text):
     #_print(colors.blue(f"[Part {id}]") + f"\t{text}", y=(id + const.CLI_STATUS_STARTLINE))
@@ -19,17 +23,17 @@ def print_part_status(id, text):
 
 def print_captcha_status(text, parts):
     _print(colors.yellow("[Link solve]") +
-           f"\t{text}", y=(parts + 0 + const.CLI_STATUS_STARTLINE))
+           f"\t{text}", y=(const.CLI_STATUS_STARTLINE + 2))
 
 
 def print_tor_status(text, parts):
     _print(colors.yellow("[Tor  start]") +
-           f"\t{text}", y=(parts + 0 + const.CLI_STATUS_STARTLINE))
+           f"\t{text}", y=(const.CLI_STATUS_STARTLINE + 1))
 
 
 def print_saved_status(text, parts):
-    _print(colors.yellow(f"[Progress]\t {text}"),
-           y=(parts + 1 + const.CLI_STATUS_STARTLINE))
+    _print(colors.yellow(f"[Progress]\t{text}"),
+           y=(const.CLI_STATUS_STARTLINE + 3))
 
 def report_saved_status(filename, size, totalSize, percent, averageSpeed, currentSpeed, remainingTime, numParts):
     print_saved_status(
@@ -42,5 +46,5 @@ def report_saved_status(filename, size, totalSize, percent, averageSpeed, curren
     )
     dictToSend = {'id': ProcessID.id, 'filename': filename, 'downloadedSize': size, 'totalSize': totalSize, 'percent': percent, 'avgSpeed': averageSpeed,
                     'currSpeed': currentSpeed, 'remainingTime': str(remainingTime)}
-    res = requests.post(f'http://localhost:5000/status/{ProcessID.id}', json=dictToSend)
+    _send_post(f'status/{ProcessID.id}', dictToSend)
 

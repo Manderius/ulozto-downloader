@@ -1,4 +1,4 @@
-CLI_STATUS_STARTLINE = 5
+CLI_STATUS_STARTLINE = 7
 XML_HEADERS = {
     "Accept-Encoding": "gzip",
     "X-Requested-With": "XMLHttpRequest",

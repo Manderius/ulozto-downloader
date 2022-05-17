@@ -9,7 +9,7 @@ import os
 import sys
 import multiprocessing as mp
 import time
-from datetime import timedelta
+from datetime import timedelta, datetime
 from types import FunctionType
 
 
@@ -168,10 +168,18 @@ class Downloader:
     def _get_best_parts_amount(sizeBytes):
         import math
         size = sizeBytes / 1024 ** 2
-        startup = 4.5
-        speed = 0.18
+        startup = 3.0
+        speed = 0.19
         amount = math.sqrt(size / (startup * speed))
         return math.floor(amount) if size > 10 else 3
+
+    @staticmethod
+    def get_expected_time(sizeBytes):
+        size = sizeBytes / 1024 ** 2
+        startup = 3.0
+        speed = 0.19
+        amount = Downloader._get_best_parts_amount(sizeBytes)
+        return (amount - 1) * startup + size / amount / speed
 
     def download(self, url, parts, target_dir=""):
         """Download file from Uloz.to using multiple parallel downloads.
@@ -261,6 +269,8 @@ class Downloader:
         utils._print(colors.blue("Size / parts: \t") +
               colors.bold(f"{round(total_size / 1024**2, 2)}MB => " +
               f"{file_data.parts} x {round(file_data.part_size / 1024**2, 2)}MB"), y=4)
+        utils._print(colors.blue("Start time: \t") + datetime.now().strftime("%H:%M"),  y=5)
+        utils._print(colors.blue("Estimated download time: ") + str(timedelta(seconds=round(Downloader.get_expected_time(total_size) * 1.15))), y=6)
 
         # fill placeholder before download started
         for part in downloads:
