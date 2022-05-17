@@ -297,7 +297,7 @@ class Page:
                     self._captcha_send_print_stat(
                         captcha_answer, print_func)
                     resp = s.post(self.captchaURL, data=captcha_data,
-                                  headers=XML_HEADERS, proxies=proxies)
+                                  headers=XML_HEADERS, proxies=proxies, timeout=4)
 
                 # generate result or break
                 result = self._link_validation_stat(resp, print_func)
@@ -319,3 +319,5 @@ class Page:
             except requests.exceptions.ReadTimeout:
                 self._error_net_stat(
                     "ReadTimeout error, try new TOR session.", print_func)
+            except:
+                pass
