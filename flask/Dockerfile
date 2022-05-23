@@ -1,4 +1,4 @@
-FROM ubuntu 
+FROM ubuntu:focal
 
 ENV TZ=Europe/Prague
 COPY ./requirements.txt ./var/www/uld/requirements.txt

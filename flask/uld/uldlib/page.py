@@ -267,11 +267,11 @@ class Page:
                     print_func(
                         f"New TOR session for GET downlink {self._stat_fmt()}")
                     resp = s.get(self.captchaURL,
-                                 headers=XML_HEADERS, proxies=proxies)
+                                 headers=XML_HEADERS, proxies=proxies, timeout=5)
                 else:
                     print_func(
                         f"New TOR session for POST captcha {self._stat_fmt()}")
-                    r = s.get(self.captchaURL, headers=XML_HEADERS)
+                    r = s.get(self.captchaURL, headers=XML_HEADERS, timeout=14)
 
                     # <img class="xapca-image" src="//xapca1.uloz.to/0fdc77841172eb6926bf57fe2e8a723226951197/image.jpg" alt="">
                     captcha_image_url = parse_single(
@@ -288,16 +288,15 @@ class Page:
                     for name in ("_token_", "timestamp", "salt", "hash", "captcha_type", "_do"):
                         captcha_data[name] = parse_single(r.text, r'name="' + re.escape(name) + r'" value="([^"]*)"')
 
-                    print_func("Image URL obtained, trying to solve")
+                    # print_func("Image URL obtained, trying to solve")
                     captcha_answer = captcha_solve_func(
                         "https:" + captcha_image_url, print_func=print_func)
 
                     captcha_data["captcha_value"] = captcha_answer
 
-                    self._captcha_send_print_stat(
-                        captcha_answer, print_func)
+                    # self._captcha_send_print_stat(captcha_answer, print_func)
                     resp = s.post(self.captchaURL, data=captcha_data,
-                                  headers=XML_HEADERS, proxies=proxies, timeout=4)
+                                  headers=XML_HEADERS, proxies=proxies, timeout=5)
 
                 # generate result or break
                 result = self._link_validation_stat(resp, print_func)

@@ -15,7 +15,7 @@ stahovaných souborů. Úpravou `flask/Dockerfile` je možné kontejner spustit 
 Pomocí Dockerfile stačí vytvořit image a následně jej spustit
 ```shell
 $ sudo docker build -t ulozto-downloader-web .
-$ docker run -p 80:5000 -v /mnt/d/Downloads:/media /ulozto-downloader-web
+$ docker run -p 80:5000 -v /mnt/d/Downloads:/media ulozto-downloader-web
 ```
 ## Použití
 Automaticky stahuje do složky `/media`, kterou je třeba namapovat při spuštění na složku mimo Docker (např. výše pro WSL2 mapování na `D:\Downloads`). Ovládání probíhá pomocí webového prohlížeče na adrese `http://localhost/`.
