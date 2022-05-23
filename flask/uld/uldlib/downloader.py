@@ -44,18 +44,17 @@ class Downloader:
         utils._print('End download monitor')
 
     def _captcha_print_func_wrapper(self, text):
-        utils.print_captcha_status(text, self.parts)
+        utils.print_captcha_status(text)
 
-    def _captcha_breaker(self, page, parts):
+    def _captcha_breaker(self, page):
         msg = ""
         if page.isDirectDownload:
             msg = "Solve direct dlink .."
         else:
             msg = "Solve CAPTCHA dlink .."
 
-        # utils.print_captcha_status(msg, parts)
         for url in self.captcha_download_links_generator:
-            utils.print_captcha_status(msg, parts)
+            # utils.print_captcha_status(msg)
             self.download_url_queue.put(url)
 
     @staticmethod
@@ -107,11 +106,15 @@ class Downloader:
         part.started = time.time()
         part.now_downloaded = 0
 
-        # Note the stream=True parameter
-        r = requests.get(part.download_url, stream=True, allow_redirects=True, headers={
-            "Range": "bytes={}-{}".format(part.pfrom + part.downloaded, part.pto),
-            "Connection": "close",
-        })
+        try:
+            # Note the stream=True parameter
+            r = requests.get(part.download_url, stream=True, allow_redirects=True, headers={
+                "Range": "bytes={}-{}".format(part.pfrom + part.downloaded, part.pto),
+                "Connection": "close",
+            }, timeout=9)
+        except Exception:
+            part.download_url = download_url_queue.get()
+            return Downloader._download_part(part, download_url_queue)
 
         if r.status_code == 429:
             utils.print_part_status(id, colors.yellow(
@@ -125,38 +128,30 @@ class Downloader:
             sys.exit(1)
 
         # reimplement as multisegment write file class
-        for chunk in r.iter_content(chunk_size=DOWN_CHUNK_SIZE):
-            if chunk:  # filter out keep-alive new chunks
-                part.write(chunk)
-                part.now_downloaded += len(chunk)
-                elapsed = time.time() - part.started
+        try:
+            for chunk in r.iter_content(chunk_size=DOWN_CHUNK_SIZE):
+                if chunk:  # filter out keep-alive new chunks
+                    part.write(chunk)
+                    part.now_downloaded += len(chunk)
+                    elapsed = time.time() - part.started
 
-                # Print status line downloaded and speed
-                # speed in bytes per second:
-                speed = part.now_downloaded / elapsed if elapsed > 0 else 0
-                # remaining time in seconds:
-                remaining = (part.size - part.downloaded) / speed if speed > 0 else 0
+                    # Print status line downloaded and speed
+                    # speed in bytes per second:
+                    speed = part.now_downloaded / elapsed if elapsed > 0 else 0
+                    # remaining time in seconds:
+                    remaining = (part.size - part.downloaded) / speed if speed > 0 else 0
 
-                utils.print_part_status(id, "{:.2f}%\t{:.2f}/{:.2f} MB\tspeed: {:.2f} KB/s\telapsed: {}\tremaining: {}".format(
-                    round(part.downloaded / part.size * 100, 2),
-                    round(part.downloaded / 1024**2,
-                          2), round(part.size / 1024**2, 2),
-                    round(speed / 1024, 2),
-                    str(timedelta(seconds=round(elapsed))),
-                    str(timedelta(seconds=round(remaining))),
-                ))
-
-        # download end status
-        r.close()
-        part.elapsed = time.time() - part.started
-        utils.print_part_status(id, colors.green("Successfully downloaded {}{} MB in {} (speed {} KB/s)".format(
-            round(part.now_downloaded / 1024**2, 2),
-            "" if part.now_downloaded == part.downloaded else (
-                "/"+str(round(part.downloaded / 1024**2, 2))
-            ),
-            str(timedelta(seconds=round(part.elapsed))),
-            round(part.now_downloaded / part.elapsed / 1024, 2) if part.elapsed > 0 else 0
-        )))
+                    utils.print_part_status(id, "{:.2f}%\t{:.2f}/{:.2f} MB\tspeed: {:.2f} KB/s\telapsed: {}\tremaining: {}".format(
+                        round(part.downloaded / part.size * 100, 2),
+                        round(part.downloaded / 1024**2,
+                            2), round(part.size / 1024**2, 2),
+                        round(speed / 1024, 2),
+                        str(timedelta(seconds=round(elapsed))),
+                        str(timedelta(seconds=round(remaining))),
+                    ))
+        except Exception as ex:
+            time.sleep(3)
+            return Downloader._download_part(part, download_url_queue)
 
         # close part file files
         part.close()
@@ -168,18 +163,18 @@ class Downloader:
     def _get_best_parts_amount(sizeBytes):
         import math
         size = sizeBytes / 1024 ** 2
-        startup = 3.0
-        speed = 0.19
+        startup = 3.3
+        speed = 0.165
         amount = math.sqrt(size / (startup * speed))
         return math.floor(amount) if size > 10 else 3
 
     @staticmethod
     def get_expected_time(sizeBytes):
         size = sizeBytes / 1024 ** 2
-        startup = 3.0
-        speed = 0.19
+        startup = 3.3
+        speed = 0.165
         amount = Downloader._get_best_parts_amount(sizeBytes)
-        return (amount - 1) * startup + size / amount / speed
+        return amount * startup + size / amount / speed
 
     def download(self, url, parts, target_dir=""):
         """Download file from Uloz.to using multiple parallel downloads.
@@ -270,14 +265,14 @@ class Downloader:
               colors.bold(f"{round(total_size / 1024**2, 2)}MB => " +
               f"{file_data.parts} x {round(file_data.part_size / 1024**2, 2)}MB"), y=4)
         utils._print(colors.blue("Start time: \t") + datetime.now().strftime("%H:%M"),  y=5)
-        utils._print(colors.blue("Estimated download time: ") + str(timedelta(seconds=round(Downloader.get_expected_time(total_size) * 1.15))), y=6)
+        utils._print(colors.blue("Estimated download time: ") + str(timedelta(seconds=round(Downloader.get_expected_time(total_size) * 1.05))), y=6)
 
         # fill placeholder before download started
-        for part in downloads:
-            if page.isDirectDownload:
-                utils.print_part_status(part.id, "Waiting for direct link...")
-            else:
-                utils.print_part_status(part.id, "Waiting for CAPTCHA...")
+        # for part in downloads:
+        #     if page.isDirectDownload:
+        #         utils.print_part_status(part.id, "Waiting for direct link...")
+        #     else:
+        #         utils.print_part_status(part.id, "Waiting for CAPTCHA...")
 
         # Prepare queue for recycling download URLs
         self.download_url_queue = mp.Queue(maxsize=0)
@@ -289,7 +284,7 @@ class Downloader:
 
             # Start CAPTCHA breaker in separate process
             self.captcha_process = mp.Process(
-                target=self._captcha_breaker, args=(page, self.parts)
+                target=self._captcha_breaker, args=(page,)
             )
 
         cpb_started = False
@@ -331,10 +326,10 @@ class Downloader:
             self.captcha_process.terminate()
             if self.isCaptcha:
                 utils.print_captcha_status(
-                    "All downloads started, no need to solve another CAPTCHAs..", self.parts)
+                    "All downloads started, no need to solve another CAPTCHAs..")
             else:
                 utils.print_captcha_status(
-                    "All downloads started, no need to solve another direct links..", self.parts)
+                    "All downloads started, no need to solve another direct links..")
 
         # 4. Wait for all downloads to finish
         success = True

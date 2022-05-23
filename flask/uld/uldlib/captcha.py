@@ -87,7 +87,7 @@ class AutoReadCaptcha:
         import tflite_runtime.interpreter as tflite
         import numpy as np
 
-        print_func("Auto solving CAPTCHA")
+        # print_func("Auto solving CAPTCHA")
 
         interpreter = tflite.Interpreter(model_content=self.model_content)
 
@@ -131,5 +131,5 @@ class AutoReadCaptcha:
             return "".join(result)
 
         decoded_label = [decode(x) for x in labels_indices][0]
-        print_func(f"CAPTCHA auto solved as '{decoded_label}'")
+        # print_func(f"CAPTCHA auto solved as '{decoded_label}'")
         return decoded_label

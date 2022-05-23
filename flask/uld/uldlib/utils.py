@@ -21,7 +21,7 @@ def print_part_status(id, text):
     pass
 
 
-def print_captcha_status(text, parts):
+def print_captcha_status(text):
     _print(colors.yellow("[Link solve]") +
            f"\t{text}", y=(const.CLI_STATUS_STARTLINE + 2))
 
